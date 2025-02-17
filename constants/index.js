@@ -38,7 +38,7 @@ const services = [
     icon: <FullStackIcon />,
   },
   {
-    title: "Frontend Developer",
+    title: "Web Developer",
     icon: <FrontendIcon />,
   },
   // {

@@ -6,8 +6,6 @@ import DOMPurify from "dompurify";
 import { slideIn } from "../utils/motion";
 
 function Contact() {
-  const formRef = useRef();
-
   const [form, setForm] = useState({
     name: "",
     email: "",
@@ -18,7 +16,6 @@ function Contact() {
   const handleChange = (e) => {
     const { name, value } = e.target;
     const sanitizedValue = DOMPurify.sanitize(value);
-
     setForm({ ...form, [name]: sanitizedValue });
   };
 
@@ -36,12 +33,22 @@ function Contact() {
       return;
     }
 
+    if (
+      !process.env.NEXT_PUBLIC_SERVICE_ID ||
+      !process.env.NEXT_PUBLIC_TEMPLATE_ID ||
+      !process.env.NEXT_PUBLIC_EMAILJS_KEY
+    ) {
+      console.error("EmailJS environment variables are missing.");
+      alert("Email configuration is not set. Please contact the administrator.");
+      return;
+    }
+
     setLoading(true);
 
     emailjs
       .send(
-        process.env.NEXT_PUBLIC_SERVICE_ID,
-        process.env.NEXT_PUBLIC_TEMPLATE_ID,
+        DOMPurify.sanitize(process.env.NEXT_PUBLIC_SERVICE_ID),
+        DOMPurify.sanitize(process.env.NEXT_PUBLIC_TEMPLATE_ID),
         {
           from_name: DOMPurify.sanitize(form.name),
           to_name: "Shahzaib Haider Ali",
@@ -49,25 +56,31 @@ function Contact() {
           to_email: "shahzaibhaiderali1@gmail.com",
           message: DOMPurify.sanitize(form.message),
         },
-        process.env.NEXT_PUBLIC_EMAILJS_KEY
+        DOMPurify.sanitize(process.env.NEXT_PUBLIC_EMAILJS_KEY)
       )
       .then(
         () => {
           setLoading(false);
           alert("Thank you for your message. I will get back to you soon.");
-
-          setForm({
-            name: "",
-            email: "",
-            message: "",
-          });
+          setForm({ name: "", email: "", message: "" });
         },
         (error) => {
           setLoading(false);
-          console.log(error);
+          console.error("EmailJS Error:", error.text || error);
           alert("Something went wrong. Please try again later.");
         }
       );
+  };
+
+  const slideIn = (direction, easing, delay, duration) => {
+    return {
+      hidden: { opacity: 0, x: direction === "left" ? -100 : 100 },
+      show: {
+        opacity: 1,
+        x: 0,
+        transition: { type: easing, delay, duration },
+      },
+    };
   };
 
   return (
@@ -79,14 +92,10 @@ function Contact() {
       className="xl:my-36 md:w-2/5 w-full bg-bgSecondaryDark xl:ml-36 lg:ml-16 md:ml-10 p-8 rounded-2xl shadow-md shadow-primary"
       id="contact"
     >
-      <p className={"sectionSubText text-ctnSecondaryDark"}>Get in touch</p>
-      <h3 className={"sectionHeadText text-ctnPrimaryDark"}>Contact.</h3>
+      <p className="sectionSubText text-ctnSecondaryDark">Get in touch</p>
+      <h3 className="sectionHeadText text-ctnPrimaryDark">Contact.</h3>
 
-      <form
-        ref={formRef}
-        onSubmit={handleSubmit}
-        className="mt-8 flex flex-col gap-8"
-      >
+      <form onSubmit={handleSubmit} className="mt-8 flex flex-col gap-8">
         <label className="flex flex-col">
           <span className="text-ctnPrimaryDark font-medium mb-4">
             Your Name
@@ -96,13 +105,14 @@ function Contact() {
             name="name"
             value={form.name}
             onChange={handleChange}
+            aria-label="Your Name"
             required
             placeholder="What is your good name?"
-            className="bg-bgPrimaryDark py-4 px-6 placeholder:text-ctnSecondaryDark rounded-lg outline-none border-none font-medium text-ctnPrimaryDark  placeholder:text-sm md:placeholder:text-lg h-fit placeholder:break-words break-words"
+            className="bg-bgPrimaryDark py-4 px-6 placeholder:text-ctnSecondaryDark rounded-lg outline-none border-none font-medium text-ctnPrimaryDark placeholder:text-sm md:placeholder:text-lg h-fit placeholder:break-words break-words"
           />
         </label>
         <label className="flex flex-col">
-          <span className="text-ctnPrimaryDark  font-medium mb-4">
+          <span className="text-ctnPrimaryDark font-medium mb-4">
             Your email
           </span>
           <input
@@ -110,13 +120,14 @@ function Contact() {
             name="email"
             value={form.email}
             onChange={handleChange}
+            aria-label="Your Email"
             required
             placeholder="What is your email address?"
-            className="bg-bgPrimaryDark py-4 px-6 placeholder:text-ctnSecondaryDark rounded-lg outline-none border-none font-medium text-ctnPrimaryDark  placeholder:text-sm md:placeholder:text-lg h-fit placeholder:break-words break-words"
+            className="bg-bgPrimaryDark py-4 px-6 placeholder:text-ctnSecondaryDark rounded-lg outline-none border-none font-medium text-ctnPrimaryDark placeholder:text-sm md:placeholder:text-lg h-fit placeholder:break-words break-words"
           />
         </label>
         <label className="flex flex-col">
-          <span className="text-ctnPrimaryDark  font-medium mb-4">
+          <span className="text-ctnPrimaryDark font-medium mb-4">
             Your Message
           </span>
           <textarea
@@ -124,9 +135,10 @@ function Contact() {
             name="message"
             value={form.message}
             onChange={handleChange}
+            aria-label="Your Message"
             required
             placeholder="What do you want to say?"
-            className="bg-bgPrimaryDark py-4 px-6 placeholder:text-ctnSecondaryDark rounded-lg outline-none border-none font-medium text-ctnPrimaryDark  placeholder:text-sm md:placeholder:text-lg h-fit placeholder:break-words break-words"
+            className="bg-bgPrimaryDark py-4 px-6 placeholder:text-ctnSecondaryDark rounded-lg outline-none border-none font-medium text-ctnPrimaryDark placeholder:text-sm md:placeholder:text-lg h-fit placeholder:break-words break-words"
           />
         </label>
 
